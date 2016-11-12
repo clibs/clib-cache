@@ -46,13 +46,6 @@ int clib_cache_init(time_t exp)
     return 0;
 }
 
-int clib_cache_has_package(clib_package_t *pkg)
-{
-    GET_PKG_CACHE(pkg);
-
-    return 0 == fs_exists(pkg_cache);
-}
-
 static int is_expired_package(char *pkg_cache)
 {
     fs_stats *stat = fs_stat(pkg_cache);
@@ -66,6 +59,13 @@ static int is_expired_package(char *pkg_cache)
     free(stat);
 
     return now - modified >= expiration;
+}
+
+int clib_cache_has_package(clib_package_t *pkg)
+{
+    GET_PKG_CACHE(pkg);
+
+    return 0 == fs_exists(pkg_cache) && !is_expired_package(pkg_cache);
 }
 
 int clib_cache_is_expired(clib_package_t *pkg)

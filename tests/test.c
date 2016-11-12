@@ -69,6 +69,7 @@ static void test_expiration(clib_package_t *pkg)
     sleep(1);
 
     mu_assert_int_eq(1, clib_cache_is_expired(pkg));
+    mu_assert_int_eq(0, clib_cache_has_package(pkg));
     mu_assert_int_eq(-2, clib_cache_load_package(pkg, "./copy"));
 
     mu_assert_int_eq(0, clib_cache_has_package(pkg));
