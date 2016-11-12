@@ -2,7 +2,7 @@
   "name": "clib-cache",
   "description": "Caching for clib packages",
   "version": "0.0.0",
-  "repo": "clibs/cache",
+  "repo": "clibs/clib-cache",
   "dependencies": {
     "isty001/copy": "0.0.0",
     "clib-package": "0.0.0",
