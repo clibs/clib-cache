@@ -5,7 +5,7 @@
   "repo": "clibs/clib-cache",
   "dependencies": {
     "isty001/copy": "0.0.0",
-    "clib-package": "0.0.0",
+    "clib-package": "0.4.2",
     "jwerle/fs.c": "0.1.2",
     "stephenmathieson/mkdirp.c": "0.1.5",
     "stephenmathieson/rimraf.c": "0.1.0"
