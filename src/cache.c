@@ -10,8 +10,10 @@
 
 
 #define GET_PKG_CACHE(pkg) char pkg_cache[PATH_MAX]; \
-                      cache_path(pkg, pkg_cache);
+                      package_cache_path(pkg_cache, pkg);
 
+#define GET_JSON_CACHE(a, n, v) char json_cache[PATH_MAX]; \
+                  json_cache_path(json_cache, a, n, v);
 
 #ifdef _WIN32
 #define BASE_DIR getenv("AppData")
@@ -19,13 +21,20 @@
 #define BASE_DIR getenv("HOME")
 #endif
 
+
+#define BASE_CACHE_PATTERN "%s/%s_%s_%s"
 static char cache_dir[PATH_MAX];
 static time_t expiration;
 
 
-static void cache_path(clib_package_t *pkg, char *path)
+static void json_cache_path(char *pkg_cache, char *author, char *name, char *version)
 {
-    sprintf(path, "%s/%s_%s_%s", cache_dir, pkg->author, pkg->name, pkg->version);
+    sprintf(pkg_cache, BASE_CACHE_PATTERN"/package.json", cache_dir, author, name, version);
+}
+
+static void package_cache_path(char *json_cache, clib_package_t *pkg)
+{
+    sprintf(json_cache, BASE_CACHE_PATTERN, cache_dir, pkg->author, pkg->name, pkg->version);
 }
 
 const char *clib_cache_dir(void)
@@ -46,9 +55,9 @@ int clib_cache_init(time_t exp)
     return 0;
 }
 
-static int is_expired_package(char *pkg_cache)
+static int is_expired(char *cache)
 {
-    fs_stats *stat = fs_stat(pkg_cache);
+    fs_stats *stat = fs_stat(cache);
 
     if (!stat) {
         return -1;
@@ -61,18 +70,32 @@ static int is_expired_package(char *pkg_cache)
     return now - modified >= expiration;
 }
 
+int clib_cache_has_json(char *author, char *name, char *version)
+{
+    GET_JSON_CACHE(author, name, version);
+
+    return 0 == fs_exists(json_cache) && !is_expired(json_cache);
+}
+
+char *clib_cache_read_json(char *author, char *name, char *version)
+{
+    GET_JSON_CACHE(author, name, version);
+
+    return fs_read(json_cache);
+}
+
 int clib_cache_has_package(clib_package_t *pkg)
 {
     GET_PKG_CACHE(pkg);
 
-    return 0 == fs_exists(pkg_cache) && !is_expired_package(pkg_cache);
+    return 0 == fs_exists(pkg_cache) && !is_expired(pkg_cache);
 }
 
 int clib_cache_is_expired(clib_package_t *pkg)
 {
     GET_PKG_CACHE(pkg);
 
-    return is_expired_package(pkg_cache);
+    return is_expired(pkg_cache);
 }
 
 int clib_cache_save_package(clib_package_t *pkg, char *pkg_dir)
@@ -94,7 +117,7 @@ int clib_cache_load_package(clib_package_t *pkg, char *target_dir)
         return -1;
     }
 
-    if (is_expired_package(pkg_cache)) {
+    if (is_expired(pkg_cache)) {
         rimraf(pkg_cache);
 
         return -2;

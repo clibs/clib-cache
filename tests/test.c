@@ -1,5 +1,6 @@
 #include <clib-package/clib-package.h>
 #include <limits.h>
+#include <string.h>
 #include "rimraf/rimraf.h"
 #include "minunit/minunit.h"
 #include "fs/fs.h"
@@ -39,6 +40,13 @@ static void test_save(clib_package_t *pkg, char *pkg_dir)
 
     assert_cached_dir(pkg_dir, 0);
     assert_cached_files(pkg_dir);
+
+    mu_assert_int_eq(1, clib_cache_has_json(pkg->author, pkg->name, pkg->version));
+
+    char *json = fs_read("./deps/copy/package.json");
+    char *cached = clib_cache_read_json(pkg->author, pkg->name, pkg->version);
+
+    mu_assert(0 == strcmp(json, cached), "Actual and cached package.json are not equal");
 }
 
 static void assert_loaded_files(void)
@@ -59,8 +67,10 @@ static void test_delete(clib_package_t *pkg, char *pkg_dir)
     mu_assert_int_eq(0, clib_cache_delete_package(pkg));
     assert_cached_dir(pkg_dir, -1);
     mu_assert(0 == clib_cache_has_package(pkg), "Package should be deleted from cached");
+    mu_assert(0 == clib_cache_has_json(pkg->author, pkg->name, pkg->version), "Package.json should be deleted from cached");
 
     mu_assert_int_eq(-1, clib_cache_load_package(pkg, "./copy"));
+    mu_assert(NULL == clib_cache_read_json(pkg->author, pkg->name, pkg->version), "Package.json should be deleted from cached");
 }
 
 static void test_expiration(clib_package_t *pkg)
@@ -74,6 +84,9 @@ static void test_expiration(clib_package_t *pkg)
 
     mu_assert_int_eq(0, clib_cache_has_package(pkg));
     mu_assert_int_eq(-1, clib_cache_load_package(pkg, "./copy"));
+
+    mu_assert(0 == clib_cache_has_json(pkg->author, pkg->name, pkg->version), "Package.json should be expired");
+    mu_assert(NULL == clib_cache_read_json(pkg->author, pkg->name, pkg->version), "Package.json should be expired");
 }
 
 MU_TEST(test_cache)

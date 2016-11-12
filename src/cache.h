@@ -22,6 +22,18 @@ int clib_cache_init(time_t expiration);
 const char *clib_cache_dir(void);
 
 /**
+ * At this point the package object is not built yet, and can't rely on it
+ *
+ * @return 0/1 is the package is cached
+ */
+int clib_cache_has_json(char *author, char *name, char *version);
+
+/**
+ * @return The content of the cached package's package.json, or NULL on error
+ */
+char *clib_cache_read_json(char *author, char *name, char *version);
+
+/**
  * @return 0/1 if the packe is cached
  */
 int clib_cache_has_package(clib_package_t *pkg);
