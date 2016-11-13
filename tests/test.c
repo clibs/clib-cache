@@ -1,4 +1,4 @@
-#include <clib-package/clib-package.h>
+#include "clib-package/clib-package.h"
 #include <limits.h>
 #include <string.h>
 #include "rimraf/rimraf.h"
@@ -36,7 +36,7 @@ static void test_save(clib_package_t *pkg, char *pkg_dir)
 {
     mu_assert_int_eq(0, clib_cache_save_package(pkg, "./deps/copy"));
     mu_assert(1 == clib_cache_has_package(pkg), "Package should be cached");
-    mu_assert(0 == clib_cache_is_expired(pkg), "This shouldn't be expired yet");
+    mu_assert(0 == clib_cache_is_expired_package(pkg), "This shouldn't be expired yet");
 
     assert_cached_dir(pkg_dir, 0);
     assert_cached_files(pkg_dir);
@@ -78,7 +78,7 @@ static void test_expiration(clib_package_t *pkg)
     mu_assert_int_eq(0, clib_cache_save_package(pkg, "./deps/copy"));
     sleep(1);
 
-    mu_assert_int_eq(1, clib_cache_is_expired(pkg));
+    mu_assert_int_eq(1, clib_cache_is_expired_package(pkg));
     mu_assert_int_eq(0, clib_cache_has_package(pkg));
     mu_assert_int_eq(-2, clib_cache_load_package(pkg, "./copy"));
 
@@ -95,6 +95,7 @@ MU_TEST(test_cache)
     pkg.author = "author";
     pkg.name = "pkg";
     pkg.version = "1.2.0";
+    pkg.version = "1.2.0";
     mu_assert_int_eq(0, clib_cache_init(1));
 
     char pkg_dir[PATH_MAX];
@@ -108,9 +109,40 @@ MU_TEST(test_cache)
     rimraf("./copy");
 }
 
+MU_TEST(test_json_save)
+{
+    mu_assert_int_eq(0, clib_cache_has_json("a", "n", "v"));
+    mu_assert(NULL == clib_cache_read_json("a", "n", "v"), "Json should be NULL");
+
+    mu_assert_int_eq(2, clib_cache_save_json("a", "n", "v", "{}"));
+    mu_assert_int_eq(0, strcmp("{}", clib_cache_read_json("a", "n", "v")));
+    mu_assert_int_eq(1, clib_cache_has_json("a", "n", "v"));
+
+    mu_assert_int_eq(0, clib_cache_delete_json("a", "n", "v"));
+    mu_assert_int_eq(0, clib_cache_has_json("a", "n", "v"));
+    mu_assert(NULL == clib_cache_read_json("a", "n", "v"), "Json should be NULL");
+}
+
+MU_TEST(test_search)
+{
+    mu_assert_int_eq(0, clib_cache_has_search());
+    mu_assert(NULL == clib_cache_read_search(), "Search cache should be NULL");
+
+    mu_assert_int_eq(13, clib_cache_save_search("<html></html>"));
+    mu_assert_int_eq(1, clib_cache_has_search());
+    mu_assert_int_eq(0, strcmp("<html></html>", clib_cache_read_search()));
+
+    mu_assert_int_eq(0, clib_cache_delete_search());
+    mu_assert_int_eq(0, clib_cache_has_search());
+    mu_assert(NULL == clib_cache_read_search(), "Search cache should be NULL");
+}
+
 int main(void)
 {
     MU_RUN_TEST(test_cache);
+    MU_RUN_TEST(test_json_save);
+    MU_RUN_TEST(test_search);
+
     MU_REPORT();
 
     return 0;
