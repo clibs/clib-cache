@@ -40,15 +40,6 @@ static void test_save(clib_package_t *pkg, char *pkg_dir)
 
     assert_cached_dir(pkg_dir, 0);
     assert_cached_files(pkg_dir);
-
-    mu_assert_int_eq(1, clib_cache_has_json(pkg->author, pkg->name, pkg->version));
-
-    char *json = fs_read("./deps/copy/package.json");
-    char *cached = clib_cache_read_json(pkg->author, pkg->name, pkg->version);
-
-    mu_assert(0 == strcmp(json, cached), "Actual and cached package.json are not equal");
-    free(json);
-    free(cached);
 }
 
 static void assert_loaded_files(void)

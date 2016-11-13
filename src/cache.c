@@ -13,9 +13,6 @@
 #define GET_PKG_CACHE(pkg) char pkg_cache[PATH_MAX]; \
                       package_cache_path(pkg_cache, pkg);
 
-#define GET_BASE_PKG_CACHE(a, n, v) char pkg_cache[PATH_MAX]; \
-                  base_package_cache_path(pkg_cache, a, n, v);
-
 #define GET_JSON_CACHE(a, n, v) char json_cache[PATH_MAX]; \
                   json_cache_path(json_cache, a, n, v);
 
@@ -26,41 +23,53 @@
 #endif
 
 
-#define BASE_CACHE_PATTERN "%s/%s_%s_%s"
-static char cache_dir[PATH_MAX];
+#define BASE_CACHE_PATTERN "%s/.cache/clib"
+#define PKG_CACHE_PATTERN "%s/%s_%s_%s"
+#define JSON_CACHE_PATTERN "%s/%s_%s_%s.json"
+
+
+static char package_cache_dir[PATH_MAX];
 static char search_cache[PATH_MAX];
+static char json_cache_dir[PATH_MAX];
 static time_t expiration;
 
 
 static void json_cache_path(char *pkg_cache, char *author, char *name, char *version)
 {
-    sprintf(pkg_cache, BASE_CACHE_PATTERN"/package.json", cache_dir, author, name, version);
-}
-
-static void base_package_cache_path(char *cache, char *author, char *name, char *version)
-{
-    sprintf(cache, BASE_CACHE_PATTERN, cache_dir, author, name, version);
+    sprintf(pkg_cache, JSON_CACHE_PATTERN, json_cache_dir, author, name, version);
 }
 
 static void package_cache_path(char *json_cache, clib_package_t *pkg)
 {
-    sprintf(json_cache, BASE_CACHE_PATTERN, cache_dir, pkg->author, pkg->name, pkg->version);
+    sprintf(json_cache, PKG_CACHE_PATTERN, package_cache_dir, pkg->author, pkg->name, pkg->version);
 }
 
 const char *clib_cache_dir(void)
 {
-    return cache_dir;
+    return package_cache_dir;
+}
+
+static int check_dir(char *dir)
+{
+    if (0 != (fs_exists(dir))) {
+        return mkdirp(dir, 0700);
+    }
+    return 0;
 }
 
 int clib_cache_init(time_t exp)
 {
     expiration = exp;
 
-    sprintf(cache_dir, "%s/.cache/clib/packages", BASE_DIR);
-    sprintf(search_cache, "%s/search.html", cache_dir);
+    sprintf(package_cache_dir, BASE_CACHE_PATTERN"/packages", BASE_DIR);
+    sprintf(json_cache_dir, BASE_CACHE_PATTERN"/json", BASE_DIR);
+    sprintf(search_cache, BASE_CACHE_PATTERN"/search.html", BASE_DIR);
 
-    if (0 != fs_exists(cache_dir)) {
-        return mkdirp(cache_dir, 0700);
+    if (0 != check_dir(package_cache_dir)) {
+        return -1;
+    }
+    if (0 != check_dir(json_cache_dir)) {
+        return -1;
     }
 
     return 0;
@@ -92,7 +101,7 @@ char *clib_cache_read_json(char *author, char *name, char *version)
 {
     GET_JSON_CACHE(author, name, version);
 
-    if (is_expired(json_cache)){
+    if (is_expired(json_cache)) {
         return NULL;
     }
 
@@ -101,15 +110,8 @@ char *clib_cache_read_json(char *author, char *name, char *version)
 
 int clib_cache_save_json(char *author, char *name, char *version, char *content)
 {
-    int err = 0;
-    GET_BASE_PKG_CACHE(author, name, version);
     GET_JSON_CACHE(author, name, version);
 
-    if (-1 == fs_exists(pkg_cache)) {
-        if (0 != (err = fs_mkdir(pkg_cache, 0700))) {
-            return err;
-        }
-    }
     return fs_write(json_cache, content);
 }
 
@@ -127,7 +129,7 @@ int clib_cache_has_search(void)
 
 char *clib_cache_read_search(void)
 {
-    if (!clib_cache_has_search()){
+    if (!clib_cache_has_search()) {
         return NULL;
     }
     return fs_read(search_cache);
