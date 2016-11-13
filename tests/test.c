@@ -47,6 +47,8 @@ static void test_save(clib_package_t *pkg, char *pkg_dir)
     char *cached = clib_cache_read_json(pkg->author, pkg->name, pkg->version);
 
     mu_assert(0 == strcmp(json, cached), "Actual and cached package.json are not equal");
+    free(json);
+    free(cached);
 }
 
 static void assert_loaded_files(void)
@@ -111,11 +113,14 @@ MU_TEST(test_cache)
 
 MU_TEST(test_json_save)
 {
+    char *cached;
+
     mu_assert_int_eq(0, clib_cache_has_json("a", "n", "v"));
     mu_assert(NULL == clib_cache_read_json("a", "n", "v"), "Json should be NULL");
 
     mu_assert_int_eq(2, clib_cache_save_json("a", "n", "v", "{}"));
-    mu_assert_int_eq(0, strcmp("{}", clib_cache_read_json("a", "n", "v")));
+    mu_assert_int_eq(0, strcmp("{}", cached = clib_cache_read_json("a", "n", "v")));
+    free(cached);
     mu_assert_int_eq(1, clib_cache_has_json("a", "n", "v"));
 
     mu_assert_int_eq(0, clib_cache_delete_json("a", "n", "v"));
@@ -125,12 +130,15 @@ MU_TEST(test_json_save)
 
 MU_TEST(test_search)
 {
+    char *cached;
+
     mu_assert_int_eq(0, clib_cache_has_search());
     mu_assert(NULL == clib_cache_read_search(), "Search cache should be NULL");
 
     mu_assert_int_eq(13, clib_cache_save_search("<html></html>"));
     mu_assert_int_eq(1, clib_cache_has_search());
-    mu_assert_int_eq(0, strcmp("<html></html>", clib_cache_read_search()));
+    mu_assert_int_eq(0, strcmp("<html></html>", cached = clib_cache_read_search()));
+    free(cached);
 
     mu_assert_int_eq(0, clib_cache_delete_search());
     mu_assert_int_eq(0, clib_cache_has_search());
