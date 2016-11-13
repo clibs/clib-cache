@@ -29,7 +29,7 @@ const char *clib_cache_dir(void);
 int clib_cache_has_json(char *author, char *name, char *version);
 
 /**
- * @return The content of the cached package.json, or NULL on error
+ * @return The content of the cached package.json, or NULL on error, if not found, or expired
  */
 char *clib_cache_read_json(char *author, char *name, char *version);
 
@@ -49,7 +49,7 @@ int clib_cache_delete_json(char *author, char *name, char *version);
 int clib_cache_has_search(void);
 
 /**
- * @return The content of the search cache, NULL on error
+ * @return The content of the search cache, NULL on error, if not found, or expired
  */
 char *clib_cache_read_search(void);
 
