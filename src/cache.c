@@ -2,6 +2,7 @@
 #include <limits.h>
 #include <unistd.h>
 #include <time.h>
+#include <mkdirp/mkdirp.h>
 #include "rimraf/rimraf.h"
 #include "fs/fs.h"
 #include "copy/copy.h"
