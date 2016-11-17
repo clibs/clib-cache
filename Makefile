@@ -4,7 +4,7 @@ TEST_SRC = $(shell find src tests deps -name '*.c')
 
 
 compile:
-	$(CC) $(CFLAGS) $(TEST_SRC) -o test.o
+	$(CC) $(CFLAGS) $(TEST_SRC) -std=gnu99 -o test.o
 
 test:
 	make compile

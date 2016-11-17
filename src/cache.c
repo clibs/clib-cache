@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <limits.h>
 #include <unistd.h>
-#include <time.h>
 #include <mkdirp/mkdirp.h>
 #include "rimraf/rimraf.h"
 #include "fs/fs.h"
@@ -10,10 +9,10 @@
 #include "cache.h"
 
 
-#define GET_PKG_CACHE(pkg) char pkg_cache[PATH_MAX]; \
+#define GET_PKG_CACHE(pkg) char pkg_cache[BUFSIZ]; \
                       package_cache_path(pkg_cache, pkg);
 
-#define GET_JSON_CACHE(a, n, v) char json_cache[PATH_MAX]; \
+#define GET_JSON_CACHE(a, n, v) char json_cache[BUFSIZ]; \
                   json_cache_path(json_cache, a, n, v);
 
 #ifdef _WIN32
@@ -27,10 +26,10 @@
 #define PKG_CACHE_PATTERN "%s/%s_%s_%s"
 #define JSON_CACHE_PATTERN "%s/%s_%s_%s.json"
 
-
-static char package_cache_dir[PATH_MAX];
-static char search_cache[PATH_MAX];
-static char json_cache_dir[PATH_MAX];
+/** Portable PATH_MAX ? */
+static char package_cache_dir[BUFSIZ];
+static char search_cache[BUFSIZ];
+static char json_cache_dir[BUFSIZ];
 static time_t expiration;
 
 
