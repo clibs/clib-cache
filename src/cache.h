@@ -5,7 +5,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <time.h>
-#include "clib-package/clib-package.h"
 
 
 /**
@@ -67,13 +66,13 @@ int clib_cache_delete_search(void);
 /**
  * @return 0/1 if the packe is cached
  */
-int clib_cache_has_package(clib_package_t *pkg);
+int clib_cache_has_package(char *author, char *name, char *version);
 
 /**
  * @return 0/1 if the cached package modified date is more or less then the given expiration.
  *         -1 if the package is not cached
  */
-int clib_cache_is_expired_package(clib_package_t *pkg);
+int clib_cache_is_expired_package(char *author, char *name, char *version);
 
 /**
  * @param target_dir Where the cached package should be copied
@@ -81,7 +80,7 @@ int clib_cache_is_expired_package(clib_package_t *pkg);
  * @return 0 on success, -1 on error, if the package is not found in the cache.
  *         If the cached package is expired, it will be deleted, and -2 returned
  */
-int clib_cache_load_package(clib_package_t *pkg, char *target_dir);
+int clib_cache_load_package(char *author, char *name, char *version, char *target_dir);
 
 /**
  * @param pkg_dir The downloaded package (e.g. ./deps/my_package).
@@ -89,12 +88,12 @@ int clib_cache_load_package(clib_package_t *pkg, char *target_dir);
  *
  * @return 0 on success, -1 on error
  */
-int clib_cache_save_package(clib_package_t *pkg, char *pkg_dir);
+int clib_cache_save_package(char *author, char *name, char *version, char *pkg_dir);
 
 /**
  * @return 0 on success, -1 on error
  */
-int clib_cache_delete_package(clib_package_t *pkg);
+int clib_cache_delete_package(char *author, char *name, char *version);
 
 
 #endif

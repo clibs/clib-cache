@@ -1,5 +1,5 @@
 CC = cc
-CFLAGS := -g -Wall -Wextra -I deps -I src -l curl
+CFLAGS := -g -Wall -Wextra -I deps -I src
 TEST_SRC = $(shell find src tests deps -name '*.c')
 
 

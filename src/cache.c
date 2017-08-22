@@ -1,16 +1,16 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <limits.h>
 #include <unistd.h>
 #include <mkdirp/mkdirp.h>
 #include "rimraf/rimraf.h"
 #include "fs/fs.h"
 #include "copy/copy.h"
-#include "clib-package/clib-package.h"
 #include "cache.h"
 
 
-#define GET_PKG_CACHE(pkg) char pkg_cache[BUFSIZ]; \
-                      package_cache_path(pkg_cache, pkg);
+#define GET_PKG_CACHE(a, n, v) char pkg_cache[BUFSIZ]; \
+                      package_cache_path(pkg_cache, a, n, v);
 
 #define GET_JSON_CACHE(a, n, v) char json_cache[BUFSIZ]; \
                   json_cache_path(json_cache, a, n, v);
@@ -38,9 +38,9 @@ static void json_cache_path(char *pkg_cache, char *author, char *name, char *ver
     sprintf(pkg_cache, JSON_CACHE_PATTERN, json_cache_dir, author, name, version);
 }
 
-static void package_cache_path(char *json_cache, clib_package_t *pkg)
+static void package_cache_path(char *json_cache, char *author, char *name, char *version)
 {
-    sprintf(json_cache, PKG_CACHE_PATTERN, package_cache_dir, pkg->author, pkg->name, pkg->version);
+    sprintf(json_cache, PKG_CACHE_PATTERN, package_cache_dir, author, name, version);
 }
 
 const char *clib_cache_dir(void)
@@ -144,23 +144,23 @@ int clib_cache_delete_search(void)
     return unlink(search_cache);
 }
 
-int clib_cache_has_package(clib_package_t *pkg)
+int clib_cache_has_package(char *author, char *name, char *version)
 {
-    GET_PKG_CACHE(pkg);
+    GET_PKG_CACHE(author, name, version);
 
     return 0 == fs_exists(pkg_cache) && !is_expired(pkg_cache);
 }
 
-int clib_cache_is_expired_package(clib_package_t *pkg)
+int clib_cache_is_expired_package(char *author, char *name, char *version)
 {
-    GET_PKG_CACHE(pkg);
+    GET_PKG_CACHE(author, name, version);
 
     return is_expired(pkg_cache);
 }
 
-int clib_cache_save_package(clib_package_t *pkg, char *pkg_dir)
+int clib_cache_save_package(char *author, char *name, char *version, char *pkg_dir)
 {
-    GET_PKG_CACHE(pkg);
+    GET_PKG_CACHE(author, name, version);
 
     if (0 == fs_exists(pkg_cache)) {
         rimraf(pkg_cache);
@@ -169,9 +169,9 @@ int clib_cache_save_package(clib_package_t *pkg, char *pkg_dir)
     return copy_dir(pkg_dir, pkg_cache);
 }
 
-int clib_cache_load_package(clib_package_t *pkg, char *target_dir)
+int clib_cache_load_package(char *author, char *name, char *version, char *target_dir)
 {
-    GET_PKG_CACHE(pkg);
+    GET_PKG_CACHE(author, name, version);
 
     if (-1 == fs_exists(pkg_cache)) {
         return -1;
@@ -186,9 +186,9 @@ int clib_cache_load_package(clib_package_t *pkg, char *target_dir)
     return copy_dir(pkg_cache, target_dir);
 }
 
-int clib_cache_delete_package(clib_package_t *pkg)
+int clib_cache_delete_package(char *author, char *name, char *version)
 {
-    GET_PKG_CACHE(pkg);
+    GET_PKG_CACHE(author, name, version);
 
     return rimraf(pkg_cache);
 }

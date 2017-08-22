@@ -1,4 +1,4 @@
-#include "clib-package/clib-package.h"
+#include <stdlib.h>
 #include <limits.h>
 #include <string.h>
 #include "rimraf/rimraf.h"
@@ -32,11 +32,11 @@ static void assert_cached_files(char *pkg_dir)
     assert_cached_file(pkg_dir, "package.json");
 }
 
-static void test_save(clib_package_t *pkg, char *pkg_dir)
+static void test_save(char *author, char *name, char *version, char *pkg_dir)
 {
-    mu_assert_int_eq(0, clib_cache_save_package(pkg, "./deps/copy"));
-    mu_assert(1 == clib_cache_has_package(pkg), "Package should be cached");
-    mu_assert(0 == clib_cache_is_expired_package(pkg), "This shouldn't be expired yet");
+    mu_assert_int_eq(0, clib_cache_save_package(author, name, version, "./deps/copy"));
+    mu_assert(1 == clib_cache_has_package(author, name, version), "Package should be cached");
+    mu_assert(0 == clib_cache_is_expired_package(author, name, version), "This shouldn't be expired yet");
 
     assert_cached_dir(pkg_dir, 0);
     assert_cached_files(pkg_dir);
@@ -49,55 +49,55 @@ static void assert_loaded_files(void)
     assert_exists("./copy/package.json");
 }
 
-static void test_load(clib_package_t *pkg)
+static void test_load(char *author, char *name, char *version)
 {
-    mu_assert_int_eq(0, clib_cache_load_package(pkg, "./copy"));
+    mu_assert_int_eq(0, clib_cache_load_package(author, name, version, "./copy"));
     assert_loaded_files();
 }
 
-static void test_delete(clib_package_t *pkg, char *pkg_dir)
+static void test_delete(char *author, char *name, char *version, char *pkg_dir)
 {
-    mu_assert_int_eq(0, clib_cache_delete_package(pkg));
+    mu_assert_int_eq(0, clib_cache_delete_package(author, name, version));
     assert_cached_dir(pkg_dir, -1);
-    mu_assert(0 == clib_cache_has_package(pkg), "Package should be deleted from cached");
-    mu_assert(0 == clib_cache_has_json(pkg->author, pkg->name, pkg->version), "Package.json should be deleted from cached");
+    mu_assert(0 == clib_cache_has_package(author, name, version), "Package should be deleted from cached");
+    mu_assert(0 == clib_cache_has_json(author, name, version),
+              "Package.json should be deleted from cached");
 
-    mu_assert_int_eq(-1, clib_cache_load_package(pkg, "./copy"));
-    mu_assert(NULL == clib_cache_read_json(pkg->author, pkg->name, pkg->version), "Package.json should be deleted from cached");
+    mu_assert_int_eq(-1, clib_cache_load_package(author, name, version, "./copy"));
+    mu_assert(NULL == clib_cache_read_json(author, name, version),
+              "Package.json should be deleted from cached");
 }
 
-static void test_expiration(clib_package_t *pkg)
+static void test_expiration(char *author, char *name, char *version)
 {
-    mu_assert_int_eq(0, clib_cache_save_package(pkg, "./deps/copy"));
+    mu_assert_int_eq(0, clib_cache_save_package(author, name, version, "./deps/copy"));
     sleep(1);
 
-    mu_assert_int_eq(1, clib_cache_is_expired_package(pkg));
-    mu_assert_int_eq(0, clib_cache_has_package(pkg));
-    mu_assert_int_eq(-2, clib_cache_load_package(pkg, "./copy"));
+    mu_assert_int_eq(1, clib_cache_is_expired_package(author, name, version));
+    mu_assert_int_eq(0, clib_cache_has_package(author, name, version));
+    mu_assert_int_eq(-2, clib_cache_load_package(author, name, version, "./copy"));
 
-    mu_assert_int_eq(0, clib_cache_has_package(pkg));
-    mu_assert_int_eq(-1, clib_cache_load_package(pkg, "./copy"));
+    mu_assert_int_eq(0, clib_cache_has_package(author, name, version));
+    mu_assert_int_eq(-1, clib_cache_load_package(author, name, version, "./copy"));
 
-    mu_assert(0 == clib_cache_has_json(pkg->author, pkg->name, pkg->version), "Package.json should be expired");
-    mu_assert(NULL == clib_cache_read_json(pkg->author, pkg->name, pkg->version), "Package.json should be expired");
+    mu_assert(0 == clib_cache_has_json(author, name, version), "Package.json should be expired");
+    mu_assert(NULL == clib_cache_read_json(author, name, version), "Package.json should be expired");
 }
 
 MU_TEST(test_cache)
 {
-    clib_package_t pkg;
-    pkg.author = "author";
-    pkg.name = "pkg";
-    pkg.version = "1.2.0";
-    pkg.version = "1.2.0";
+    char *author = "author";
+    char *name = "pkg";
+    char *version = "1.2.0";
     mu_assert_int_eq(0, clib_cache_init(1));
 
     char pkg_dir[PATH_MAX];
     sprintf(pkg_dir, "%s/author_pkg_1.2.0", clib_cache_dir());
 
-    test_save(&pkg, pkg_dir);
-    test_load(&pkg);
-    test_delete(&pkg, pkg_dir);
-    test_expiration(&pkg);
+    test_save(author, name, version, pkg_dir);
+    test_load(author, name, version);
+    test_delete(author, name, version, pkg_dir);
+    test_expiration(author, name, version);
 
     rimraf("./copy");
 }
