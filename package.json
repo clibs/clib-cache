@@ -1,7 +1,7 @@
 {
   "name": "clib-cache",
   "description": "Caching for clib packages",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "scripts": {
     "version": "./scripts/update-clib-json && git add clib.json",
     "test": "make test"
